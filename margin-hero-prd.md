@@ -34,7 +34,7 @@
 
 **نطاق V1:** ست ميزات أساسية تُمكّن التاجر من رؤية ربحه الحقيقي خلال أقل من 10 دقائق من التثبيت.
 
-**التسعير:** 99 / 199 / 349 ريال شهرياً.
+**التسعير:** 99 / 249 / 449 ريال شهرياً (محدّث بناءً على Benchmark تنافسي — Sampo AI بـ 749 ريال يثبت قدرة السوق على الدفع).
 
 **الشريحة الأولية:** تجار سلة في فئات العطور، الأزياء، المكملات — 50+ طلب شهرياً.
 
@@ -55,8 +55,10 @@
 
 ### 2.2 لماذا الآن؟ (Why Now)
 
-- منصة سلة وصلت لمرحلة نضج: أكثر من 70 ألف تاجر، API ناضج يدعم `cost_price`
-- لا يوجد منافس مباشر داخل سلة (مؤكد عبر بحث حي — أبريل 2026)
+- منصة سلة وصلت لمرحلة نضج: أكثر من 68,000 تاجر نشط (مصدر: Salla 2026)
+- ✅ **API ناضج ومؤكد** يدعم `cost_price` كاملاً (PUT فردي + Bulk + SKU)
+- ✅ **صفر منافسين مباشرين** في Salla App Store — فئة Accounting & Finance فارغة (تحقق مباشر مايو 2026)
+- ✅ **Sampo AI** يُسعّر بـ 749 ريال/شهر بدون حساب ربح — يثبت قدرة السوق على الدفع
 - المنافسون العالميون (TrueProfit، BeProfit، Lifetimely) أثبتوا الطلب: 1,335+ مراجعة مدفوعة
 - ارتفاع وعي التجار بمفهوم الربحية مقابل الإيرادات
 
@@ -79,7 +81,7 @@
 | **B2** — تحويل تجربة → مدفوع | Trial-to-paid | ≥ 25% |
 | **B3** — احتفاظ شهر 1-3 | Churn | < 15% |
 | **B4** — قاعدة عملاء عند نهاية 6 أشهر | عدد المتاجر المدفوعة | ≥ 200 |
-| **B5** — MRR | Monthly Recurring Revenue | ≥ 40,000 ريال |
+| **B5** — MRR | Monthly Recurring Revenue | ≥ 50,000 ريال (محدّث بعد رفع التسعير) |
 
 ### 2.4 ما ليس هدفاً (Non-Goals) في V1
 
@@ -173,9 +175,11 @@
 **US-02:** كتاجر، أريد أن أُدخل تكلفة أهم 10 منتجات في خطوة موجّهة، حتى أرى الربحية فوراً.
 - **AC-02.1:** بعد الربط، يعرض النظام أعلى 10 منتجات مبيعاً تلقائياً
 - **AC-02.2:** لكل منتج: حقل "التكلفة" (cost_price) فارغ أو معبّأ مسبقاً إذا كان موجوداً في سلة
-- **AC-02.3:** يستطيع التاجر تخطّي منتج (Skip) أو تعبئة الكل دفعة واحدة
-- **AC-02.4:** عند حفظ القيم، تتم مزامنتها مع Salla Products API
-- **AC-02.5:** يظهر شريط تقدّم: "8 من 10 منتجات لها تكلفة"
+- **AC-02.3:** يستطيع التاجر تخطّي منتج فردي، **لكن لا يمكن تخطي الخطوة كلها** — يجب إدخال تكلفة 5 منتجات على الأقل لفتح Dashboard
+- **AC-02.4:** خيار **Smart Defaults** بالفئة: لو ضغط "املأ تلقائياً"، يقترح النظام تكلفة تقديرية حسب فئة المنتج (عطور 60% من السعر، أزياء 50%، مكملات 45%) — مع علامة "تقديري"
+- **AC-02.5:** عند حفظ القيم، تتم مزامنتها مع Salla Products API (`PUT /admin/v2/products/{id}`)
+- **AC-02.6:** يظهر شريط تقدّم: "5 من 10 منتجات لها تكلفة — ✅ يمكنك الآن فتح Dashboard"
+- **AC-02.7:** خيار **Bulk Quick Entry** — جدول Excel-like لإدخال تكاليف 20+ منتج في واجهة واحدة
 
 **US-03:** كتاجر، أريد اختيار بوابات الدفع التي يستخدمها متجري، حتى تُحسب الرسوم تلقائياً.
 - **AC-03.1:** قائمة Checkbox تحوي البوابات السعودية الشائعة
@@ -275,13 +279,18 @@
 - لكل بوابة: نسبة افتراضية + خيار "تعديل النسبة"
 - إذا كانت البوابة غير موجودة في القائمة → خيار "أضف بوابة مخصصة"
 
-**Step 5 — إدخال التكاليف:**
+**Step 5 — إدخال التكاليف (Cost Capture Gate):**
 - يُحدد النظام أعلى 10 منتجات مبيعاً (آخر 30 يوم)
 - لكل منتج: صورة + اسم + سعر بيع + حقل "التكلفة (ريال)"
 - إذا كان `cost_price` موجوداً مسبقاً في سلة → يُعرض للتأكيد
-- خيار "Skip" لكل منتج
-- خيار "استورد من Excel" (CSV upload)
-- بعد الحفظ: يُحدّث `cost_price` في Salla عبر API
+- 🔴 **Gate إجباري:** الحد الأدنى لفتح Dashboard هو **5 منتجات بتكلفة**. لا يستطيع التاجر تخطّي الخطوة كلها
+- **3 طرق لتعبئة سريعة:**
+  1. **يدوياً:** Skip لكل منتج فردي مسموح (لكن لازم يصل لـ 5)
+  2. **Smart Defaults بالفئة:** زر "املأ تلقائياً بهامش متوقع" — يستخدم متوسطات الفئة (عطور 60%، أزياء 50%، مكملات 45%) مع علامة "تقديري"
+  3. **Bulk Quick Entry:** جدول Excel-like في صفحة واحدة لإدخال 20+ منتج
+  4. **Excel/CSV Import:** رفع ملف بـ (SKU، التكلفة)
+- بعد الحفظ: يُحدّث `cost_price` في Salla عبر API (`PUT /admin/v2/products/{id}` أو الـ Bulk endpoint)
+- التكاليف الـ Smart Defaults تظهر بشارة دائمة "تقديري — أكّد الرقم الحقيقي" حتى يعدّلها التاجر
 
 **Step 6 — عتبة التنبيه:**
 - اقتراح افتراضي: 10%
@@ -303,7 +312,8 @@
 #### 5.1.6 معايير القبول (Acceptance Criteria)
 - ✅ التاجر يكمل Onboarding في < 10 دقائق (متوسط)
 - ✅ نسبة إكمال Onboarding > 60%
-- ✅ بعد Onboarding، يرى التاجر دولاراً واحداً على الأقل من الربح المحسوب فعلياً
+- ✅ **100% من التجار يصلون Dashboard مع تكلفة 5 منتجات على الأقل** (Cost Capture Gate)
+- ✅ بعد Onboarding، يرى التاجر ربحاً حقيقياً محسوباً لـ 5+ منتجات
 - ✅ يعمل على الجوال والديسكتوب
 - ✅ متاح بالكامل بالعربية مع RTL
 
@@ -864,27 +874,117 @@ read_categories
 
 ### 9.2 Endpoints المستخدمة
 
-| Endpoint | الاستخدام |
-|---|---|
-| `GET /products` | جلب المنتجات (Pagination 50/page) |
-| `PUT /products/{id}` | تحديث cost_price و price |
-| `GET /orders` | جلب الطلبات (Filter بالتاريخ) |
-| `GET /orders/{id}` | تفاصيل طلب |
-| `GET /coupons` | الكوبونات النشطة |
-| `GET /payments/methods` | بوابات الدفع المفعّلة في المتجر |
+**حالة التحقق:** ✅ **Confirmed** (تحقق مباشر من docs.salla.dev — مايو 2026)
 
-### 9.3 Webhooks المستخدمة
+| Endpoint | Method | الاستخدام | حالة |
+|---|---|---|---|
+| `/admin/v2/products` | GET | جلب المنتجات (Pagination 50/page) | ✅ Confirmed |
+| `/admin/v2/products/{id}` | PUT | تحديث `cost_price` و `price` لمنتج واحد | ✅ Confirmed |
+| `/admin/v2/products/sku/{sku}` | PUT | تحديث منتج عبر SKU (بديل أكثر مرونة) | ✅ Confirmed |
+| `/admin/v2/products/quantities/prices` | PUT | **Bulk Update** — تحديث `price` + `cost_price` + `sale_price` لعدة منتجات دفعة واحدة | ✅ Confirmed |
+| `/admin/v2/orders` | GET | جلب الطلبات (Filter بالتاريخ) | ✅ Confirmed |
+| `/admin/v2/orders/{id}` | GET | تفاصيل طلب | ✅ Confirmed |
+| `/admin/v2/coupons` | GET | الكوبونات النشطة | ✅ Confirmed |
+| `/admin/v2/payments/methods` | GET | بوابات الدفع المفعّلة في المتجر | ✅ Confirmed |
+
+**Scope المطلوب:** `products.read_write` (لـ PUT)، `orders.read`، `coupons.read`، `settings.read`
+
+**التعريف الرسمي لـ `cost_price` من Salla:**
+> "Product cost price, the amount a business pays to acquire or manufacture a product before any additional expenses."
+
+### 9.3 Webhooks المستخدمة (محدّثة بناءً على Specialized Events)
+
+> ⚠️ **تحذير مهم:** Salla هجرت (Deprecated) الـ events العامة مثل `product.updated` و `product.available`. الـ PRD يستخدم الآن **Specialized Events** فقط.
+
+#### 9.3.1 Order Webhooks (مؤكدة من docs.salla.dev — مايو 2026)
+
+| Event | الإجراء | حالة |
+|---|---|---|
+| `order.created` | حساب الربح فوراً + تنبيه إذا انطبق | ✅ Confirmed |
+| `order.updated` | إعادة حساب الربح عند تعديل عام | ✅ Confirmed |
+| `order.status.updated` | تتبع تغييرات الحالة (تنفيذ، شحن، تسليم) — schema منفصل: `OrdersUpdateStatusWebhookResponse` | ✅ Confirmed |
+| `order.cancelled` | استبعاد الطلب من إحصاءات الربح (S-CALC-11) | ✅ Confirmed |
+| `order.refunded` | 🔴 **المرتجع الكامل** (S-CALC-09): إعادة حساب Net Profit = -PaymentFee - ShippingActual، نقل الطلب لقائمة المرتجعات | ✅ Confirmed (schema: `OrdersWebhookResponse`) |
+| `order.shipment.return.creating` | بدء إنشاء شحنة إرجاع — تنبيه استباقي | ✅ Confirmed |
+| `order.shipment.return.created` | 🔴 **المرتجع الجزئي** (S-CALC-10): إعادة حساب الربح للمنتجات المتبقية فقط | ✅ Confirmed |
+| `order.shipment.return.cancelled` | إلغاء شحنة إرجاع — إعادة الحساب | ✅ Confirmed |
+| `order.products.updated` | تعديل منتجات في الطلب — إعادة حساب COGS | ✅ Confirmed |
+| `order.payment.updated` | تغيير طريقة الدفع — إعادة حساب رسوم البوابة | ✅ Confirmed |
+| `order.coupon.updated` | تعديل/إضافة/إزالة كوبون — إعادة حساب الخصم | ✅ Confirmed |
+| `order.total.price.updated` | تغيير إجمالي السعر — Fallback لاكتشاف المرتجعات الجزئية | ✅ Confirmed |
+| `order.shipment.creating` | تتبع تكلفة الشحن الفعلية إن أتيحت | ✅ Confirmed |
+| `order.shipment.created` | تأكيد إرسال الشحنة | ✅ Confirmed |
+| `order.shipment.cancelled` | إعادة فتح الحساب | ✅ Confirmed |
+| `order.shipping.address.updated` | تحديث بيانات الشحن (لتقديرات تكلفة الشحن) | ✅ Confirmed |
+| `order.deleted` | حذف الطلب من الإحصاءات | ✅ Confirmed |
+
+#### 9.3.2 Product Webhooks (Specialized — موصى بها رسمياً)
 
 | Event | الإجراء |
 |---|---|
-| `order.created` | حساب الربح + تنبيه إذا انطبق |
-| `order.updated` | إعادة الحساب |
-| `order.cancelled` | استبعاد من الإحصاءات |
-| `order.refunded` | تعديل الربح |
-| `product.created` | إضافة للقائمة |
-| `product.updated` | تحديث الأسعار |
+| `product.created` | إضافة للقائمة، شارة "أدخل التكلفة" إذا `cost_price = null` |
+| `product.price.updated` | إعادة حساب الهامش الحالي للمنتج (يحوي حقل `cost` وليس `cost_price`) |
+| `product.status.updated` | تحديث حالة المنتج (active/draft/archived) |
+| `product.image.updated` | تحديث الصورة في قائمة المنتجات |
+| `product.category.updated` | تحديث التصنيف للفلترة |
+
+#### 9.3.3 App Lifecycle Webhooks
+
+| Event | الإجراء |
+|---|---|
 | `app.installed` | بدء Onboarding |
-| `app.uninstalled` | إغلاق المتجر، حفظ بياناته 30 يوم |
+| `app.uninstalled` | تجميد الحساب، حفظ البيانات 30 يوم |
+
+#### 9.3.4 ⚠️ تحذير تقني للفريق — اختلاف تسمية الحقل
+
+| المكان | اسم حقل التكلفة |
+|---|---|
+| في `PUT /products` API (Request Body) | `cost_price` |
+| في `product.created` webhook (Payload) | `cost_price` |
+| في `product.price.updated` webhook (Payload) | **`cost`** (مختصر) |
+
+**القاعدة في الكود:** كل webhook handler يجب أن يتعامل مع الاسمين، ونوحدّهم داخلياً تحت `cost_price`.
+
+```typescript
+const costPrice = payload.cost_price ?? payload.cost ?? null;
+```
+
+#### 9.3.5 ✅ آلية المرتجعات — مؤكدة بالكامل
+
+**النتيجة بعد التحقق المباشر من docs.salla.dev و starter kits الرسمية (Laravel + Express):**
+
+| السيناريو | الـ Event المستخدم | الـ Schema |
+|----------|-------------------|-----------|
+| المرتجع الكامل للطلب | `order.refunded` | `OrdersWebhookResponse` (نفس schema `order.created`) |
+| المرتجع الجزئي (إرجاع بعض المنتجات) | `order.shipment.return.created` | Schema منفصل لشحنات الإرجاع |
+| إلغاء طلب قبل الشحن | `order.cancelled` | — |
+| تعديل سعر/منتجات الطلب | `order.total.price.updated` + `order.products.updated` | — |
+
+**Code Pattern في الـ Handler:**
+
+```typescript
+// المرتجع الكامل
+onWebhook('order.refunded', (payload) => {
+  const order = payload.data;
+  recalculateProfit({
+    orderId: order.id,
+    cogs: 0,                              // المنتجات رجعت
+    paymentFee: order.amounts.payment_fee, // الرسوم لا تُسترد
+    shippingActual: order.amounts.shipping_cost.amount,
+    netProfit: -(paymentFee + shippingActual)
+  });
+  markAsRefunded(order.id);
+});
+
+// المرتجع الجزئي
+onWebhook('order.shipment.return.created', (payload) => {
+  const returnShipment = payload.data;
+  const returnedItems = returnShipment.items;
+  recalculatePartialProfit(returnShipment.order_id, returnedItems);
+});
+```
+
+**ميزة Fallback مدمجة:** event `order.total.price.updated` يطلق عند أي تغير في الإجمالي — يصلح للاكتشاف الذكي لأي مرتجع جزئي قد يفوته الـ shipment event.
 
 ### 9.4 معالجة Rate Limits
 
@@ -1043,7 +1143,7 @@ def calculate_fee(order):
 
 | | **Starter** | **Growth** | **Pro** |
 |---|---|---|---|
-| **السعر/شهر** | 99 ريال | 199 ريال | 349 ريال |
+| **السعر/شهر** | 99 ريال | 249 ريال | 449 ريال |
 | **حد الطلبات/شهر** | 100 | 500 | غير محدود |
 | **عدد المنتجات** | 100 | 500 | غير محدود |
 | **Order Profit Card** | ✅ | ✅ | ✅ |
@@ -1056,6 +1156,17 @@ def calculate_fee(order):
 | **عدد المستخدمين** | 1 | 3 | غير محدود |
 | **دعم** | Email | Email + WhatsApp | Priority + Slack |
 | **تجربة مجانية** | 14 يوم | 14 يوم | 14 يوم |
+
+### 13.1.1 مبرر التسعير (Pricing Rationale)
+
+| العنصر | الدليل |
+|--------|--------|
+| **Sampo AI** (Salla App Store) | 749 ريال/شهر — تسعير AI فقط، بدون حساب ربح |
+| **TrueProfit** (Shopify) | $29.95-$99.95/شهر = 112-375 ريال |
+| **BeProfit** (Shopify) | $25-$100/شهر = 94-375 ريال |
+| **تجار سلة المستهدفون** | 25-60 ألف ريال إيرادات/شهر → 449 ريال = 0.75-1.8% فقط |
+
+**القاعدة:** السوق يدفع. التسعير القديم (199/349) كان متحفظاً. الجديد (249/449) يقع في وسط نطاق Shopify ودون نصف Sampo.
 
 ### 13.2 سياسة الترقية والإلغاء
 
@@ -1239,9 +1350,11 @@ def calculate_fee(order):
 
 | الخطر | الاحتمال | التأثير | خطة التخفيف |
 |---|---|---|---|
-| **التجار لا يدخلون cost_price** | عالٍ | عالٍ | Onboarding يطلب أهم 10 فقط + Excel import + شارة دائمة "أدخل التكلفة" |
+| **التجار لا يدخلون cost_price** | **متوسط ⬇️** | عالٍ | **Cost Capture Gate إجباري (5 منتجات)** + Smart Defaults بالفئة + Bulk Quick Entry + Excel import + شارة "تقديري" |
+| ~~webhook المرتجعات~~ ✅ **محلول** | — | — | مؤكد: `order.refunded` للكامل + `order.shipment.return.created` للجزئي (تحقق مباشر من docs.salla.dev + Salla Laravel/Express Starter Kits) |
 | **فقدان الثقة بالأرقام** | متوسط | عالٍ | شفافية كاملة — كل رقم يُشرح مصدره + breakdown قابل للتدقيق |
 | **سلة تطلق ميزة منافسة nativey** | منخفض | متوسط | طبقة التوصيات تحميه — سلة عادة تبني الأرقام لا الذكاء |
+| **منافس مباشر يدخل Salla App Store** | **منخفض ⬇️** (مؤكد: صفر منافسين في مايو 2026) | متوسط | السرعة للسوق + بناء حواجز (تكاملات WhatsApp، Smart Defaults، نموذج بيانات تكلفة خاص) |
 | **بوصلة تطور ميزة ربحية** | متوسط | متوسط | تركيزنا على الربحية التشغيلية، بوصلة على المخزون والإعلانات |
 | **Salla API غير مستقر / تعطّل** | منخفض | عالٍ | Polling fallback + Reconciliation jobs + تنبيه مستخدم |
 | **تأخير الـ MVP** | متوسط | عالٍ | Scope صارم، أسبوعياً Sprint Review، إزالة ميزات إن لزم |
@@ -1249,8 +1362,17 @@ def calculate_fee(order):
 | **رسوم بوابات الدفع غير دقيقة** | متوسط | متوسط | تخصيص يدوي للتاجر + مراجعة ربع سنوية |
 | **Churn مرتفع بعد التجربة** | متوسط | عالٍ | Daily Pulse يبني العادة + ROI واضح + onboarding ممتاز |
 | **مشاكل WhatsApp delivery** | منخفض | متوسط | Email fallback + In-app كقناة احتياطية |
+| **اختلاف تسمية `cost` vs `cost_price` في webhooks** | عالٍ (تقني) | منخفض | كل webhook handler يستخدم: `cost_price ?? cost ?? null` |
+| **استخدام events مهجورة (product.updated)** | محل (مُحلّ) | — | الـ PRD يستخدم Specialized Events فقط: `product.price.updated`, `product.status.updated`, ... |
 
-**لا يوجد خطر قاتل (Showstopper). الخطر في التنفيذ، لا في الفكرة.**
+**لا يوجد خطر قاتل (Showstopper).** بعد التحقق الشامل من Salla docs (مايو 2026):
+- ✅ API يدعم `cost_price` بالكامل (CRUD + Bulk + per-SKU)
+- ✅ صفر منافسين مباشرين في Salla App Store
+- ✅ Order webhooks تحوي كل الحقول المالية المطلوبة
+- ✅ **آلية المرتجعات مؤكدة بالكامل** — `order.refunded` للكامل + `order.shipment.return.created` للجزئي
+- ✅ Specialized Product Events مؤكدة (`product.price.updated`, إلخ)
+
+**كل المخاطر التقنية الحرجة تم حلها. الطريق مفتوح للبناء.**
 
 ---
 
@@ -1286,10 +1408,14 @@ def calculate_fee(order):
 - **النتيجة المتوقعة:** عند العودة، يتم استئناف Onboarding من حيث توقّف
 - **التحقق:** المزامنة استمرت في الخلفية، البيانات جاهزة، فقط إدخال التكاليف بقي
 
-#### S-ONB-06: التاجر يتخطّى كل خطوات إدخال التكاليف
-- **Trigger:** ضغط "Skip" على كل المنتجات الـ 10
-- **النتيجة المتوقعة:** يصل لـ Dashboard مع رسالة بارزة: "أدخل تكاليف منتجاتك لرؤية ربحك الفعلي"
-- **الإجراء المستمر:** Banner علوي ثابت + إشعار يومي حتى يدخل تكلفة منتج واحد على الأقل
+#### S-ONB-06: التاجر يحاول تخطّي كل خطوات إدخال التكاليف
+- **Trigger:** ضغط "Skip" على كل المنتجات الـ 10 (أقل من 5)
+- **النتيجة المتوقعة:** **Dashboard مقفول** — رسالة: "نحتاج تكاليف 5 منتجات على الأقل لنحسب ربحك"
+- **الخيارات المعروضة:**
+  1. زر "املأ تلقائياً بهامش متوقع" (Smart Defaults)
+  2. زر "Bulk Quick Entry" (جدول واحد)
+  3. زر "استورد من Excel"
+- **بعد الوصول لـ 5 منتجات:** يفتح Dashboard فوراً + Banner لتشجيع إكمال الباقي
 
 #### S-ONB-07: التاجر يستخدم Excel Import
 - **Trigger:** اختيار "استورد من Excel" في Step 5
